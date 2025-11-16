@@ -1,0 +1,8 @@
+django
+numpy
+opencv-python
+ultralytics
+pandas
+openpyxl
+Pillow
+pytesseract
