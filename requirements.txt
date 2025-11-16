@@ -1,0 +1,10 @@
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+gradio>=4.44.0
+pillow>=10.3.0
+transformers>=4.44.2
+torch>=2.2.0,<3.0.0
+accelerate>=0.33.0
+safetensors>=0.4.3
+rapidfuzz>=3.9.0
+pydantic>=2.7.0
