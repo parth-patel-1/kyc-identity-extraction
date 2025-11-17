@@ -193,7 +193,7 @@ This is the recommended entrypoint for batch runs. It supports three subcommands
 #### 3.1.1 Aadhaar front
 
 ```bash
-python batch_infer_all.py aadhaar_front /path/to/front_images -o aadhaar_front.xlsx -b 4
+python batch_infer_all.py aadhaar_front "./data/Adhar Front" -o "./result/final_aadhaar_front.xlsx" -b 4
 ```
 
 - Input: folder of Aadhaar **front** images.
@@ -207,22 +207,19 @@ python batch_infer_all.py aadhaar_front /path/to/front_images -o aadhaar_front.x
 #### 3.1.2 Aadhaar back
 
 ```bash
-python batch_infer_all.py aadhaar_back /path/to/back_images -o aadhaar_back.xlsx -b 4 [--use-front-prompt-for-aadhaar]
+python batch_infer_all.py aadhaar_back "./data/Adhar Back" -o "./result/final_aadhaar_back.xlsx" -b 4
 ```
 
 - Input: folder of Aadhaar **back** images.
 - Output: XLSX (`aadhaar_back.xlsx` by default) with columns:
   - `file`
-  - `aadhaar_number` (optional; from front prompt if `--use-front-prompt-for-aadhaar` is used)
+  - `aadhaar_number`
   - `address`
-- Notes:
-  - First pass uses `PROMPT_AADHAAR_BACK` for address.
-  - Optional second pass with `PROMPT_AADHAAR_FRONT` (if `--use-front-prompt-for-aadhaar` is set) to improve Aadhaar number extraction.
 
 #### 3.1.3 PAN
 
 ```bash
-python batch_infer_all.py pan /path/to/pan_images -o pan.xlsx -b 4
+python batch_infer_all.py pan "./data/Pan" -o "./result/final_pan.xlsx" -b 4
 ```
 
 - Input: folder of **PAN** images.
@@ -249,7 +246,7 @@ python batch_infer_all.py pan /path/to/pan_images -o pan.xlsx -b 4
    - Upload the selected documents, fill in the form, and click **Verify & Generate Report**.
 4. **Review results**:
    - Check per-field scores and explanations in the HTML report.
-   - Pay special attention to:
+   - Pay special attention to: 
      - Aadhaar number front vs back.
      - DOB Aadhaar vs PAN.
      - Name / PAN Name / Father’s Name / Address proportional matches.
