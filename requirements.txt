@@ -8,3 +8,4 @@ accelerate>=0.33.0
 safetensors>=0.4.3
 rapidfuzz>=3.9.0
 pydantic>=2.7.0
+openpyxl
