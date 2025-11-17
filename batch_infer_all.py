@@ -1,5 +1,4 @@
 import os
-import csv
 import re
 from typing import Dict, Any, List
 
@@ -41,6 +40,35 @@ def clean_aadhaar_number(value: str) -> str:
     return digits[:12] if len(digits) >= 12 else digits
 
 
+def _strip_dob_from_text(text: str) -> str:
+    """
+    Remove any DOB-like fragments (e.g. 'DOB: 01/01/1990') from the text.
+    This keeps address clean for Aadhaar BACK side where the
+    model may occasionally mix DOB into the address field.
+    """
+    if not text:
+        return ""
+
+    # Pattern for common date formats like 01/01/1990 or 1-1-90
+    date_pattern = r"\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}"
+
+    # Remove phrases like "DOB: 01/01/1990", "Date of Birth - 01-01-1990", etc.
+    text = re.sub(
+        rf"(?i)\b(?:dob|d\.o\.b|date of birth)\b[:\-\s]*{date_pattern}",
+        "",
+        text,
+    )
+
+    # If the word DOB is still present, remove nearby date tokens and the word itself
+    if re.search(r"(?i)\b(dob|d\.o\.b|date of birth)\b", text):
+        text = re.sub(date_pattern, "", text)
+        text = re.sub(r"(?i)\b(dob|d\.o\.b|date of birth)\b[:\-]?", "", text)
+
+    # Collapse extra spaces and trim punctuation
+    text = re.sub(r"\s{2,}", " ", text)
+    return text.strip(" ,;:-")
+
+
 # ---------- Aadhaar FRONT ----------
 
 def normalize_front_fields(raw: Dict[str, Any]) -> Dict[str, str]:
@@ -72,7 +100,12 @@ def normalize_front_fields(raw: Dict[str, Any]) -> Dict[str, str]:
     return out
 
 
-def run_aadhaar_front_folder(input_dir: str, output_csv: str, batch_size: int = 4) -> str:
+def run_aadhaar_front_folder(input_dir: str, output_xlsx: str, batch_size: int = 4) -> str:
+    """
+    Batch Aadhaar FRONT OCR.
+    Output is a real Excel file (.xlsx) with columns:
+    file, name, gender, dob, aadhaar_number
+    """
     rows: List[Dict[str, Any]] = []
     file_list = _collect_image_files(input_dir)
 
@@ -106,12 +139,10 @@ def run_aadhaar_front_folder(input_dir: str, output_csv: str, batch_size: int = 
             pbar.update(len(batch_fnames))
 
     fieldnames = ["file", "name", "gender", "dob", "aadhaar_number"]
-    with open(output_csv, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
-
-    return os.path.abspath(output_csv)
+    df = pd.DataFrame(rows, columns=fieldnames)
+    os.makedirs(os.path.dirname(os.path.abspath(output_xlsx)), exist_ok=True)
+    df.to_excel(output_xlsx, index=False)
+    return os.path.abspath(output_xlsx)
 
 
 # ---------- Aadhaar BACK ----------
@@ -124,11 +155,11 @@ def normalize_address(raw: Dict[str, Any]) -> str:
             continue
         lk = re.sub(r"[^a-z]", "", str(k).lower())
         if "address" in lk:
-            return str(v).strip()
+            return _strip_dob_from_text(str(v).strip())
     return ""
 
 
-def normalize_aadhaar_from_front(raw: Dict[str, Any]) -> str:
+def normalize_aadhaar_number(raw: Dict[str, Any]) -> str:
     if not isinstance(raw, dict):
         return ""
     for k, v in raw.items():
@@ -187,9 +218,13 @@ def run_aadhaar_back_folder(
 
             for fname, raw_back, raw_front in zip(valid_fnames, raw_back_list, raw_front_list):
                 address = normalize_address(raw_back)
+                # Prefer Aadhaar number from the FRONT-style prompt if requested,
+                # otherwise fall back to whatever the BACK prompt returns.
                 aadhaar_number = ""
                 if raw_front is not None:
-                    aadhaar_number = normalize_aadhaar_from_front(raw_front)
+                    aadhaar_number = normalize_aadhaar_number(raw_front)
+                if not aadhaar_number:
+                    aadhaar_number = normalize_aadhaar_number(raw_back)
 
                 rows.append(
                     {
@@ -209,7 +244,7 @@ def run_aadhaar_back_folder(
 
 # ---------- PAN ----------
 
-def run_pan_folder(input_dir: str, output_csv: str, batch_size: int = 4) -> str:
+def run_pan_folder(input_dir: str, output_xlsx: str, batch_size: int = 4) -> str:
     """
     Batch PAN OCR using the PROMPT_PAN and canonicalize_keys
     from app_gradio_kyc.
@@ -254,12 +289,11 @@ def run_pan_folder(input_dir: str, output_csv: str, batch_size: int = 4) -> str:
             pbar.update(len(batch_fnames))
 
     fieldnames = ["file", "permanent_account_number", "name", "father_s_name", "date_of_birth"]
-    with open(output_csv, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
+    df = pd.DataFrame(rows, columns=fieldnames)
+    os.makedirs(os.path.dirname(os.path.abspath(output_xlsx)), exist_ok=True)
+    df.to_excel(output_xlsx, index=False)
 
-    return os.path.abspath(output_csv)
+    return os.path.abspath(output_xlsx)
 
 
 if __name__ == "__main__":
@@ -272,10 +306,10 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(dest="doc_type", required=True)
 
     # Aadhaar front
-    p_front = subparsers.add_parser("aadhaar_front", help="Batch Aadhaar FRONT OCR to CSV")
+    p_front = subparsers.add_parser("aadhaar_front", help="Batch Aadhaar FRONT OCR to XLSX")
     p_front.add_argument("folder", help="Folder with Aadhaar front images")
     p_front.add_argument(
-        "-o", "--output", default="aadhaar_front.csv", help="Output CSV path"
+        "-o", "--output", default="aadhaar_front.xlsx", help="Output XLSX path"
     )
     p_front.add_argument(
         "-b",
@@ -308,10 +342,10 @@ if __name__ == "__main__":
     )
 
     # PAN
-    p_pan = subparsers.add_parser("pan", help="Batch PAN OCR to CSV")
+    p_pan = subparsers.add_parser("pan", help="Batch PAN OCR to XLSX")
     p_pan.add_argument("folder", help="Folder with PAN images")
     p_pan.add_argument(
-        "-o", "--output", default="pan.csv", help="Output CSV path"
+        "-o", "--output", default="pan.xlsx", help="Output XLSX path"
     )
     p_pan.add_argument(
         "-b",

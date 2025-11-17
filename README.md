@@ -193,11 +193,11 @@ This is the recommended entrypoint for batch runs. It supports three subcommands
 #### 3.1.1 Aadhaar front
 
 ```bash
-python batch_infer_all.py aadhaar_front /path/to/front_images -o aadhaar_front.csv -b 4
+python batch_infer_all.py aadhaar_front /path/to/front_images -o aadhaar_front.xlsx -b 4
 ```
 
 - Input: folder of Aadhaar **front** images.
-- Output: CSV (`aadhaar_front.csv` by default) with columns:
+- Output: Excel (`aadhaar_front.xlsx` by default) with columns:
   - `file`
   - `name`
   - `gender`
@@ -222,11 +222,11 @@ python batch_infer_all.py aadhaar_back /path/to/back_images -o aadhaar_back.xlsx
 #### 3.1.3 PAN
 
 ```bash
-python batch_infer_all.py pan /path/to/pan_images -o pan.csv -b 4
+python batch_infer_all.py pan /path/to/pan_images -o pan.xlsx -b 4
 ```
 
 - Input: folder of **PAN** images.
-- Output: CSV (`pan.csv` by default) with columns:
+- Output: Excel (`pan.xlsx` by default) with columns:
   - `file`
   - `permanent_account_number`
   - `name`

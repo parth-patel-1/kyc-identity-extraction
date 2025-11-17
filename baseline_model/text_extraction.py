@@ -6,7 +6,7 @@ from pytesseract import Output
 
 # Load the model
 model = YOLO('aadhar_yolo_weights.pt')  # pretrained YOLOv8n model
-large_image_path = "D:\\M.Tech Sem 3\\NLP\\Project\\NetraAadhar\\data\\Adhar Front\\aadhar_front (169).jpg"
+large_image_path = "D:\\M.Tech Sem 3\\NLP\\Project\\NetraAadhar\\data\\Adhar Front\\aadhar_front (26).jpg"
 
 
 # Perform inference
