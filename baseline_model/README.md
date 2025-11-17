@@ -1,7 +1,8 @@
-# NetraAadhar- Baseline model
-NetraAdhar Paper: https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10975021 
 
-NetraAadhar Repo: https://github.com/Adinp1213/NetraAadhar
+# NetraAadhar- Baseline model
+
+[NetraAdhar Paper](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10975021)  
+[NetraAadhar Repo](https://github.com/Adinp1213/NetraAadhar)
 
 A Python-based pipeline to automatically extract key fields from Aadhaar card images using a YOLO model for field detection and Tesseract OCR for text recognition. Supports:
 
@@ -18,42 +19,49 @@ A Python-based pipeline to automatically extract key fields from Aadhaar card im
 
 Create and activate a virtual environment (recommended), then install:
 
+```bash
 pip install -r requirements.txt
+```
 
 `requirements.txt` includes:
 
-- ultralytics – YOLOv8 model and inference.
-- pytesseract – Python wrapper for Tesseract OCR.
-- opencv-python – Image/video utilities (e.g. webcam).
-- pandas, openpyxl – For Excel file creation.
-- numpy, Pillow – Image processing.
-- django – For any web UI endpoints you may add.
+- `ultralytics` – YOLOv8 model and inference.
+- `pytesseract` – Python wrapper for Tesseract OCR.
+- `opencv-python` – Image/video utilities (e.g. webcam).
+- `pandas`, `openpyxl` – For Excel file creation.
+- `numpy`, `Pillow` – Image processing.
+- `django` – For any web UI endpoints you may add.
 
 ### 1.2. System Tesseract OCR
 
 You MUST install Tesseract OCR as a separate system program:
 
-- Windows  
-  Download and install from: https://github.com/UB-Mannheim/tesseract/wiki  
-  Then add the Tesseract install folder (e.g. C:\Program Files\Tesseract-OCR) to your PATH.
+#### Windows
+Download and install from: [Tesseract Installation](https://github.com/UB-Mannheim/tesseract/wiki)  
+Then add the Tesseract install folder (e.g. `C:\Program Files\Tesseract-OCR`) to your PATH.
 
-- Linux (Debian/Ubuntu)
+#### Linux (Debian/Ubuntu)
+```bash
+sudo apt-get install tesseract-ocr
+```
 
-  sudo apt-get install tesseract-ocr
-
-- macOS (Homebrew)
-
-  brew install tesseract
+#### macOS (Homebrew)
+```bash
+brew install tesseract
+```
 
 If Tesseract is not on your PATH, set the path manually in your code:
 
+```python
 import pytesseract
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR	esseract.exe"
+```
 
 ---
 
 ## 2. Project Structure (typical)
 
+```plaintext
 .
 ├── main.py                 # Main entrypoint (if used)
 ├── realtime.py             # Real-time / webcam inference
@@ -63,6 +71,7 @@ pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tessera
 ├── aadhar_yolo_weights.pt  # YOLOv8 trained weights for Aadhaar fields
 ├── README.md
 └── requirements.txt
+```
 
 ---
 
@@ -98,8 +107,6 @@ This is handled by extract.py (the batch script). It:
 - Extracts fields via YOLO + Tesseract.
 - Stores all results in a single .xlsx file.
 
-
-
 ### 4.2. Running batch inference
 
 1. Place all your Aadhaar images in a folder.
@@ -108,25 +115,29 @@ This is handled by extract.py (the batch script). It:
 
 3. Run the batch script from the project directory:
 
-   ```python extract.py <folder path> aadhar_yolo_weights.pt output.xlsx```
+   ```bash
+   python extract.py <folder path> aadhar_yolo_weights.pt output.xlsx
+   ```
 
    Arguments:
-   - extract.py – batch script.
-   - folder_path – first argument (required).
-   - model_path – second argument (optional, defaults to aadhar_yolo_weights.pt).
-   - output.xlsx – third argument (optional, defaults to aadhar_extracted.xlsx).
+   - `extract.py` – batch script.
+   - `folder_path` – first argument (required).
+   - `model_path` – second argument (optional, defaults to aadhar_yolo_weights.pt).
+   - `output.xlsx` – third argument (optional, defaults to aadhar_extracted.xlsx).
 
 4. For each image, you’ll see console logs like:
 
+   ```plaintext
    Processing: D:/.../adhar_ (3).jpg
    [adhar_ (3).jpg] [Name] OCR: JOHN DOE
    [adhar_ (3).jpg] [Gender] OCR: MALE
    [adhar_ (3).jpg] [Aadhar Number] OCR: 1234 5678 9012
    ...
+   ```
 
 5. When finished, open the generated Excel file:
 
-   aadhar_extracted.xlsx
+   `aadhar_extracted.xlsx`
 
    The sheet will typically contain columns like:
 
@@ -145,14 +156,15 @@ Each row corresponds to a single image in the input folder.
 
 You can experiment with single-image inference using text_extraction.py or a similar script:
 
-```python text_extraction.py```
+```bash
+python text_extraction.py
+```
 
 Typical workflow inside the script:
 
-1. Set large_image_path to your Aadhaar image.
-2. Run YOLO detection (model.track / model.predict).
+1. Set `large_image_path` to your Aadhaar image.
+2. Run YOLO detection (`model.track / model.predict`).
 3. For each detected box, crop the bounding box and run Tesseract OCR.
 4. Print the extracted text per field.
 
 This is useful for debugging predictions before running batch inference.
-
